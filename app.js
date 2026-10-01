@@ -73,10 +73,24 @@
      from someone poking at this code — but it beats storing
      plaintext passwords in localStorage.
      --------------------------------------------------------- */
-  async function hashPassword(password) {
-    const enc = new TextEncoder().encode(password);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  function fallbackHash(s) {
+    let h1 = 0xdeadbeef ^ s.length, h2 = 0x41c6ce57 ^ s.length;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return "f:" + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+  }
+  async function hashPassword(password, forceFallback) {
+    try {
+      if (!forceFallback && window.crypto && crypto.subtle) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password));
+        return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    } catch (e) { console.warn("Web Crypto unavailable, using fallback hash", e); }
+    return fallbackHash(password);
   }
 
   /* ---------------------------------------------------------
@@ -104,15 +118,15 @@
     const users = getUsers();
     const user = users[username];
     if (!user) return { ok: false, error: "No account with that username." };
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(password, String(user.passwordHash).startsWith("f:"));
     if (passwordHash !== user.passwordHash) return { ok: false, error: "Incorrect password." };
     return { ok: true };
   }
 
-  function startSession(username) {
+  function startSession(username, isNew) {
     currentUser = username;
     store.set(GLOBAL_KEYS.session, { username });
-    showApp();
+    showApp(isNew);
   }
 
   function logout() {
@@ -120,15 +134,19 @@
     localStorage.removeItem(GLOBAL_KEYS.session);
     document.getElementById("appRoot").style.display = "none";
     document.getElementById("authScreen").style.display = "flex";
+    document.getElementById("onboard").style.display = "none";
     document.getElementById("loginForm").reset();
     document.getElementById("signupForm").reset();
   }
 
-  function showApp() {
+  function showApp(isNew) {
     document.getElementById("authScreen").style.display = "none";
     document.getElementById("appRoot").style.display = "flex";
-    document.getElementById("dashGreeting").textContent = `Welcome back, ${currentUser}`;
-    renderAll();
+    document.getElementById("dashGreeting").textContent = isNew ? `Welcome, ${currentUser}` : `Welcome back, ${currentUser}`;
+    syncDietUI();
+    navigateTo("dashboard");
+    try { renderAll(); } catch (e) { console.error(e); }
+    if (isNew || !getProfile().onboarded) openOnboarding();
   }
 
   function initAuth() {
@@ -148,7 +166,8 @@
       errEl.textContent = "";
       const username = document.getElementById("loginUsername").value;
       const password = document.getElementById("loginPassword").value;
-      const result = await login(username, password);
+      let result;
+      try { result = await login(username, password); } catch (err) { console.error(err); result = { ok: false, error: "Something went wrong. Check the browser console." }; }
       if (!result.ok) {
         errEl.textContent = result.error;
         return;
@@ -167,12 +186,13 @@
         errEl.textContent = "Passwords don't match.";
         return;
       }
-      const result = await signup(username, password);
+      let result;
+      try { result = await signup(username, password); } catch (err) { console.error(err); result = { ok: false, error: "Something went wrong. Check the browser console." }; }
       if (!result.ok) {
         errEl.textContent = result.error;
         return;
       }
-      startSession(username.trim());
+      startSession(username.trim(), true);
       showToast(`Welcome, ${username.trim()} 👋`);
     });
 
@@ -318,6 +338,8 @@
     if (view === "weight") renderWeight();
     if (view === "goals") renderGoals();
     if (view === "achievements") renderAchievements();
+    if (view === "settings") renderSettings();
+    window.scrollTo(0, 0);
   }
 
   function initNav() {
@@ -598,6 +620,7 @@
     renderWeightTrendChart("weightTrendChart");
     document.getElementById("sidebarStreakCount").textContent = computeStreak();
     renderQuoteOfTheDay();
+    renderPlanCard();
   }
 
   function renderQuoteOfTheDay() {
@@ -630,6 +653,7 @@
 
   function renderWeeklyCalorieChart() {
     const ctx = document.getElementById("weeklyCalorieChart");
+    if (typeof Chart === "undefined") return;
     ctx.closest(".chart-card")?.classList.add("chart-ready");
     const meals = getMeals();
     const workouts = getWorkouts();
@@ -644,8 +668,8 @@
     weeklyChart = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets: [
-        { label: "In", data: inData, backgroundColor: "#ff7a1a", borderRadius: 4 },
-        { label: "Out", data: outData, backgroundColor: "#ffab5e", borderRadius: 4 },
+        { label: "In", data: inData, backgroundColor: cssVar("--primary"), borderRadius: 4 },
+        { label: "Out", data: outData, backgroundColor: cssVar("--charge"), borderRadius: 4 },
       ]},
       options: chartBaseOptions(),
     });
@@ -653,6 +677,7 @@
 
   function renderWeightTrendChart(canvasId) {
     const ctx = document.getElementById(canvasId);
+    if (typeof Chart === "undefined") return;
     ctx.closest(".chart-card")?.classList.add("chart-ready");
     const logs = [...getWeightLogs()].sort((a, b) => a.date.localeCompare(b.date));
     const labels = logs.map((l) => fmtShortDate(l.date));
@@ -665,8 +690,8 @@
       type: "line",
       data: { labels: labels.length ? labels : ["No data"], datasets: [{
         label: "Weight (kg)", data: data.length ? data : [0],
-        borderColor: "#ffcb8a", backgroundColor: "rgba(255,203,138,0.12)",
-        tension: 0.35, fill: true, pointBackgroundColor: "#ffcb8a", pointRadius: 3,
+        borderColor: cssVar("--primary"), backgroundColor: cssVar("--primary") + "22",
+        tension: 0.35, fill: true, pointBackgroundColor: cssVar("--primary"), pointRadius: 3,
       }]},
       options: chartBaseOptions(),
     });
@@ -678,10 +703,10 @@
     return {
       responsive: true, maintainAspectRatio: false, resizeDelay: 100,
       animation: { duration: 300 },
-      plugins: { legend: { labels: { color: "#b3aea7", font: { family: "Manrope", size: 11 } } } },
+      plugins: { legend: { labels: { color: cssVar("--text-muted"), font: { family: "Manrope", size: 11 } } } },
       scales: {
-        x: { ticks: { color: "#948f88", font: { size: 10 } }, grid: { color: "#333333" } },
-        y: { ticks: { color: "#948f88", font: { size: 10 } }, grid: { color: "#333333" }, beginAtZero: true },
+        x: { ticks: { color: cssVar("--text-faint"), font: { size: 10 } }, grid: { color: cssVar("--border") } },
+        y: { ticks: { color: cssVar("--text-faint"), font: { size: 10 } }, grid: { color: cssVar("--border") }, beginAtZero: true },
       },
     };
   }
@@ -736,10 +761,11 @@
 
   function renderMacroRing(protein, carbs, fats) {
     const ctx = document.getElementById("macroRingChart");
+    if (typeof Chart === "undefined") return;
     const pCal = protein * 4, cCal = carbs * 4, fCal = fats * 9;
     const total = pCal + cCal + fCal;
     const data = total > 0 ? [pCal, cCal, fCal] : [1, 1, 1];
-    const colors = ["#ffcb8a", "#ffffff", "#ffab5e"];
+    const colors = [cssVar("--primary"), cssVar("--charge"), "#f59e0b"];
 
     if (macroRingChart) macroRingChart.destroy();
     macroRingChart = new Chart(ctx, {
@@ -752,9 +778,9 @@
     });
 
     document.getElementById("macroLegend").innerHTML = `
-      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:#ffcb8a"></span>Protein <b>${round1(protein)}g</b></div>
-      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:#ffffff"></span>Carbs <b>${round1(carbs)}g</b></div>
-      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:#ffab5e"></span>Fats <b>${round1(fats)}g</b></div>
+      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:${colors[0]}"></span>Protein <b>${round1(protein)}g</b></div>
+      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:${colors[1]}"></span>Carbs <b>${round1(carbs)}g</b></div>
+      <div class="macro-legend-item"><span class="macro-legend-dot" style="background:${colors[2]}"></span>Fats <b>${round1(fats)}g</b></div>
     `;
   }
 
@@ -785,6 +811,7 @@
   /* ---------------------------------------------------------
      QUICK ADD — MEALS
      --------------------------------------------------------- */
+  let renderQuickGrid = () => {};
   let activeCategory = "all";
   let activeDiet = "all";
 
@@ -898,6 +925,7 @@
       }
     });
 
+    renderQuickGrid = renderGrid;
     renderGrid();
   }
 
@@ -1428,6 +1456,228 @@
   }
 
   /* ---------------------------------------------------------
+     Appearance — light (white + navy) by default, dark + accent in Settings
+     --------------------------------------------------------- */
+  const ACCENTS = [
+    { id: "navy", name: "Navy", light: "#1e3a8a", dark: "#7c9cff" },
+    { id: "blue", name: "Royal blue", light: "#2563eb", dark: "#6ea0ff" },
+    { id: "teal", name: "Teal", light: "#0f766e", dark: "#2dd4bf" },
+    { id: "purple", name: "Purple", light: "#6d28d9", dark: "#a78bfa" },
+    { id: "crimson", name: "Crimson", light: "#be123c", dark: "#fb7185" },
+    { id: "forest", name: "Forest", light: "#15803d", dark: "#4ade80" },
+    { id: "orange", name: "Orange", light: "#c2410c", dark: "#fb923c" },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function mixHex(a, b, t) {
+    const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const x = p(a), y = p(b);
+    return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("");
+  }
+  const getAppearance = () => ({ theme: "light", accent: "navy", ...store.get("forge_appearance", {}) });
+  function applyAppearance() {
+    const a = getAppearance();
+    const acc = ACCENTS.find((x) => x.id === a.accent) || ACCENTS[0];
+    const dark = a.theme === "dark";
+    const c = dark ? acc.dark : acc.light;
+    const r = document.documentElement;
+    r.dataset.theme = dark ? "dark" : "light";
+    r.style.setProperty("--primary", c);
+    r.style.setProperty("--burn", mixHex(c, "#ffffff", dark ? 0.25 : 0.2));
+    r.style.setProperty("--charge", mixHex(c, "#ffffff", 0.45));
+  }
+  function setAppearance(patch) {
+    store.set("forge_appearance", { ...getAppearance(), ...patch });
+    applyAppearance();
+    if (currentUser) { try { renderDashboard(); renderMeals(); renderWeight(); } catch (e) { console.error(e); } }
+    renderSettings();
+  }
+  function renderSettings() {
+    const a = getAppearance();
+    const dark = a.theme === "dark";
+    document.querySelectorAll("#themeSeg button").forEach((b) => b.classList.toggle("active", b.dataset.theme === a.theme));
+    $("accentSwatches").innerHTML = ACCENTS.map((x) =>
+      `<button type="button" class="swatch ${x.id === a.accent ? "active" : ""}" data-accent="${x.id}" style="--sw:${dark ? x.dark : x.light}" aria-label="${x.name}" title="${x.name}"></button>`).join("");
+    const p = getProfile();
+    $("settingsPlanSummary").textContent = p.diet && p.physique
+      ? `${PHYSIQUE[p.physique].label} · ${p.diet === "veg" ? "Vegetarian" : "Non-vegetarian"} · ${p.gymDays} gym days/week · ${p.sessionMin} min sessions`
+      : "You haven't finished setup yet.";
+  }
+  function initSettings() {
+    document.querySelectorAll("#themeSeg button").forEach((b) => b.addEventListener("click", () => setAppearance({ theme: b.dataset.theme })));
+    $("accentSwatches").addEventListener("click", (e) => {
+      const b = e.target.closest(".swatch");
+      if (b) setAppearance({ accent: b.dataset.accent });
+    });
+    $("themeQuick").addEventListener("click", () => setAppearance({ theme: getAppearance().theme === "dark" ? "light" : "dark" }));
+    $("editPlanBtn").addEventListener("click", openOnboarding);
+    renderSettings();
+  }
+
+  /* ---------------------------------------------------------
+     Diet filter — veg users only ever see veg foods
+     --------------------------------------------------------- */
+  function syncDietUI() {
+    const diet = getProfile().diet;
+    activeDiet = diet === "veg" ? "veg" : "all";
+    const wrap = $("dietChips");
+    if (wrap) {
+      wrap.style.display = diet === "veg" ? "none" : "";
+      wrap.querySelectorAll(".diet-chip").forEach((c) => c.classList.toggle("active", c.dataset.diet === activeDiet));
+    }
+    renderQuickGrid();
+  }
+
+  /* ---------------------------------------------------------
+     Plan — calories, macros and weekly split from the setup answers
+     (standard Mifflin-St Jeor estimate; a starting point, not medical advice)
+     --------------------------------------------------------- */
+  const PHYSIQUE = {
+    aesthetic: { label: "Aesthetic", protein: 2.0, focus: "Shoulders, back width and arms, plus 2 short cardio sessions a week to stay lean." },
+    muscular: { label: "Muscular", protein: 2.2, focus: "Heavy compound lifts, progressive overload and minimal cardio, eating in a small surplus." },
+    fit: { label: "Fit", protein: 1.6, focus: "A balanced mix of strength, cardio and mobility for all-round fitness." },
+  };
+  const SPLITS = {
+    1: ["Full body"], 2: ["Full body A", "Full body B"], 3: ["Push", "Pull", "Legs"],
+    4: ["Upper", "Lower", "Upper", "Lower"], 5: ["Push", "Pull", "Legs", "Upper", "Lower"],
+    6: ["Push", "Pull", "Legs", "Push", "Pull", "Legs"],
+  };
+  function computePlan(p) {
+    const bmr = 10 * p.weight + 6.25 * p.heightCm - 5 * (p.age || 20) + (p.gender === "female" ? -161 : 5);
+    const factor = { 1: 1.3, 2: 1.4, 3: 1.5, 4: 1.55, 5: 1.65, 6: 1.7 }[p.gymDays] || 1.4;
+    let delta = 0;
+    if (p.goalWeight < p.weight - 0.5) delta = -400;
+    else if (p.goalWeight > p.weight + 0.5) delta = 300;
+    if (p.physique === "muscular") delta = Math.max(delta, 250);
+    if (p.physique === "aesthetic") delta = delta > 0 ? 100 : Math.min(delta, -200);
+    return { calories: Math.max(1200, Math.round((bmr * factor + delta) / 10) * 10) };
+  }
+  function macrosFor(cal, weight, physique) {
+    const protein = Math.round(weight * ((PHYSIQUE[physique] || {}).protein || 1.8));
+    const fats = Math.round((cal * 0.25) / 9);
+    const carbs = Math.max(0, Math.round((cal - protein * 4 - fats * 9) / 4));
+    return { protein, carbs, fats };
+  }
+  function renderPlanCard() {
+    const el = $("planCard");
+    if (!el) return;
+    const p = getProfile();
+    if (!p.diet || !p.physique) {
+      el.innerHTML = `<div class="plan-empty"><div><h3>Set up your plan</h3><p>Add your weight, food preference, physique and gym days to get calories, macros and a weekly split.</p></div><button type="button" class="btn-primary" id="planSetupBtn">Start setup</button></div>`;
+      $("planSetupBtn").addEventListener("click", openOnboarding);
+      return;
+    }
+    const w = currentWeightKg();
+    const goals = getGoals();
+    const cal = Number(goals.dailyCalorieTarget) || computePlan({ ...p, weight: w, goalWeight: goals.weightTarget || w }).calories;
+    const m = macrosFor(cal, w, p.physique);
+    const week = new Set(getWorkouts().filter((x) => x.date >= daysAgoStr(6)).map((x) => x.date)).size;
+    const split = (SPLITS[p.gymDays] || []).map((s, i) => `<span class="split-chip"><b>Day ${i + 1}</b>${s}</span>`).join("");
+    el.innerHTML = `
+      <div class="plan-head"><div><p class="eyebrow">Your plan</p><h3>${PHYSIQUE[p.physique].label} · ${p.diet === "veg" ? "🟢 Vegetarian" : "🔴 Non-veg"}</h3></div>
+        <button type="button" class="btn-ghost small" id="planEditBtn">Edit</button></div>
+      <div class="plan-macros">
+        <div><span>${cal}</span><small>kcal / day</small></div><div><span>${m.protein}g</span><small>protein</small></div>
+        <div><span>${m.carbs}g</span><small>carbs</small></div><div><span>${m.fats}g</span><small>fats</small></div>
+      </div>
+      <p class="plan-line"><b>This week:</b> ${week} / ${p.gymDays} gym days · ${p.sessionMin} min sessions</p>
+      <div class="plan-split">${split}</div>
+      <p class="plan-focus">${PHYSIQUE[p.physique].focus}</p>
+      <p class="hint-text">Estimates from standard formulas, a starting point rather than medical advice.</p>`;
+    $("planEditBtn").addEventListener("click", openOnboarding);
+  }
+
+  /* ---------------------------------------------------------
+     Setup wizard (shown after sign-up, and from Settings / dashboard)
+     --------------------------------------------------------- */
+  const ob = { step: 1, diet: null, physique: null, days: null, mins: null };
+  function obSyncChoices() {
+    document.querySelectorAll("#onboard [data-group]").forEach((g) => {
+      g.querySelectorAll("button[data-value]").forEach((b) => b.classList.toggle("active", String(ob[g.dataset.group]) === b.dataset.value));
+    });
+  }
+  function obShow(step) {
+    ob.step = step;
+    document.querySelectorAll(".ob-step").forEach((s) => s.classList.toggle("active", Number(s.dataset.step) === step));
+    $("obStepLabel").textContent = `Step ${step} of 3`;
+    $("obBar").style.width = (step / 3) * 100 + "%";
+    $("obBack").style.visibility = step === 1 ? "hidden" : "visible";
+    $("obNext").textContent = step === 3 ? "Build my plan" : "Next";
+    $("obError").textContent = "";
+  }
+  function openOnboarding() {
+    const p = getProfile(), g = getGoals(), logs = getWeightLogs();
+    $("obWeight").value = logs.length ? logs[logs.length - 1].weight : "";
+    $("obGoalWeight").value = g.weightTarget || "";
+    $("obHeight").value = p.heightCm || "";
+    $("obAge").value = p.age || "";
+    $("obGender").value = p.gender || "male";
+    Object.assign(ob, { diet: p.diet || null, physique: p.physique || null, days: p.gymDays || null, mins: p.sessionMin || null });
+    obSyncChoices();
+    obShow(1);
+    $("onboard").style.display = "flex";
+    setTimeout(() => $("obWeight").focus(), 50);
+  }
+  function obError(step) {
+    if (step === 1) {
+      const w = Number($("obWeight").value), gw = Number($("obGoalWeight").value), h = Number($("obHeight").value), a = Number($("obAge").value);
+      if (!(w >= 20 && w <= 300)) return "Enter your current weight in kg.";
+      if (!(gw >= 20 && gw <= 300)) return "Enter your goal weight in kg.";
+      if (!(h >= 100 && h <= 250)) return "Enter your height in cm.";
+      if (!(a >= 12 && a <= 90)) return "Enter your age.";
+    }
+    if (step === 2 && !ob.diet) return "Choose vegetarian or non-vegetarian.";
+    if (step === 2 && !ob.physique) return "Choose the physique you're going for.";
+    if (step === 3 && !ob.days) return "Choose how many days a week you can train.";
+    if (step === 3 && !ob.mins) return "Choose how long each session can be.";
+    return "";
+  }
+  function obFinish() {
+    const weight = Number($("obWeight").value), goalWeight = Number($("obGoalWeight").value);
+    const heightCm = Number($("obHeight").value), age = Number($("obAge").value), gender = $("obGender").value;
+    const plan = computePlan({ weight, goalWeight, heightCm, age, gender, physique: ob.physique, gymDays: ob.days });
+    const level = ob.days <= 1 ? "light" : ob.days <= 3 ? "moderate" : ob.days <= 5 ? "active" : "very_active";
+    store.set(userKey("profile"), { ...getProfile(), heightCm, age, gender, diet: ob.diet, physique: ob.physique, gymDays: ob.days, sessionMin: ob.mins, activityLevel: level, onboarded: true });
+    store.set(userKey("goals"), { ...getGoals(), dailyCalorieTarget: plan.calories, weightTarget: goalWeight, weeklyWorkoutTarget: ob.days });
+    const logs = getWeightLogs();
+    if (!logs.length || logs[logs.length - 1].weight !== weight) {
+      logs.push({ id: uid(), date: todayStr(), createdAt: Date.now(), weight });
+      store.set(userKey("weightLogs"), logs);
+    }
+    $("onboard").style.display = "none";
+    syncDietUI();
+    renderAll();
+    navigateTo("dashboard");
+    showToast("Your plan is ready 🎯");
+  }
+  function obNext() {
+    const err = obError(ob.step);
+    if (err) { $("obError").textContent = err; return; }
+    if (ob.step < 3) obShow(ob.step + 1); else obFinish();
+  }
+  function initOnboarding() {
+    document.querySelectorAll("#onboard [data-group]").forEach((g) => {
+      g.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-value]");
+        if (!b) return;
+        const numeric = g.dataset.group === "days" || g.dataset.group === "mins";
+        ob[g.dataset.group] = numeric ? Number(b.dataset.value) : b.dataset.value;
+        obSyncChoices();
+      });
+    });
+    $("obNext").addEventListener("click", obNext);
+    $("obBack").addEventListener("click", () => obShow(Math.max(1, ob.step - 1)));
+    $("obSkip").addEventListener("click", () => {
+      store.set(userKey("profile"), { ...getProfile(), onboarded: true });
+      $("onboard").style.display = "none";
+      renderPlanCard();
+    });
+    $("onboard").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); obNext(); }
+    });
+  }
+
+  /* ---------------------------------------------------------
      Utils
      --------------------------------------------------------- */
   function escapeHtml(str) {
@@ -1471,7 +1721,7 @@
      Init
      --------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
-    initEmbers();
+    applyAppearance();
     initAuth();
     initPasswordToggles();
     initNav();
@@ -1486,6 +1736,8 @@
     initBmiCard();
     initWaterTracker();
     initSleepForm();
+    initOnboarding();
+    initSettings();
 
     tryRestoreSession();
   });

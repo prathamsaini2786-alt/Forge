@@ -6,7 +6,8 @@
 <title>FORGE — Workout & Calorie Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="theme.css?v=4">
 </head>
 <body>
 
@@ -82,8 +83,7 @@
      =================================================== -->
 <div class="app" id="appRoot" style="display:none;">
 
-  <!-- ===== SIDEBAR NAV ===== -->
-  <nav class="sidebar">
+  <header class="topbar">
     <button type="button" class="brand" id="brandHome" aria-label="Go to dashboard">
       <span class="aura-mark small"><span class="aura-ring"></span><span class="aura-core"></span></span>
       <span class="brand-name">FORGE</span>
@@ -113,12 +113,13 @@
         <svg viewBox="0 0 24 24" class="nav-icon"><path d="M20 2H4v2h1l3.5 6.5C7.3 11.9 6 13.8 6 16a6 6 0 0 0 5 5.92V22H8v2h8v-2h-3v-.08A6 6 0 0 0 18 16c0-2.2-1.3-4.1-2.5-5.5L19 4h1V2zM12 20a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>
         <span>Achievements</span>
       </li>
+    <li class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M4 6h10v2H4zM18 6h2v2h-2zM14 4h2v6h-2zM4 16h2v2H4zM10 16h10v2H10zM6 14h2v6H6z"/></svg>
+        <span>Settings</span>
+      </li>
     </ul>
-    <button type="button" class="sidebar-logout" id="logoutBtn">
-      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M10 3v2H5v14h5v2H3V3h7zm5.7 4.3 4 4a1 1 0 0 1 0 1.4l-4 4-1.4-1.4L16.6 13H8v-2h8.6l-2.3-2.3 1.4-1.4z"/></svg>
-      <span>Log Out</span>
-    </button>
-    <div class="streak-wrap">
+    <div class="topbar-actions">
+      <div class="streak-wrap">
       <button type="button" class="streak-pill" id="sidebarStreak" aria-haspopup="true" aria-expanded="false">
         <span class="streak-flame">⚡</span>
         <span id="sidebarStreakCount">0</span> day streak
@@ -135,7 +136,10 @@
         </div>
       </div>
     </div>
-  </nav>
+      <button type="button" class="topbar-btn" id="themeQuick" aria-label="Toggle light or dark mode">◐<span>Theme</span></button>
+      <button type="button" class="topbar-btn" id="logoutBtn"><svg viewBox="0 0 24 24" class="nav-icon"><path d="M10 3v2H5v14h5v2H3V3h7zm5.7 4.3 4 4a1 1 0 0 1 0 1.4l-4 4-1.4-1.4L16.6 13H8v-2h8.6l-2.3-2.3 1.4-1.4z"/></svg><span>Log Out</span></button>
+    </div>
+  </header>
 
   <!-- ===== MAIN CONTENT ===== -->
   <main class="content">
@@ -189,6 +193,8 @@
           </div>
         </div>
       </div>
+
+      <div class="plan-card" id="planCard"></div>
 
       <div class="chart-grid">
         <div class="chart-card">
@@ -466,7 +472,70 @@
       <div class="badge-grid" id="badgeGrid"></div>
     </section>
 
+    <!-- ---------- SETTINGS ---------- -->
+    <section class="view" id="view-settings">
+      <header class="view-header"><div><p class="eyebrow">Personalise</p><h1>Settings</h1></div></header>
+      <div class="settings-card">
+        <h3>Appearance</h3>
+        <div class="seg" id="themeSeg"><button type="button" data-theme="light">☀ Light</button><button type="button" data-theme="dark">🌙 Dark</button></div>
+        <p class="hint-text" style="margin-top:18px">Accent colour</p>
+        <div class="swatches" id="accentSwatches"></div>
+      </div>
+      <div class="settings-card">
+        <h3>Your plan</h3>
+        <p class="hint-text" id="settingsPlanSummary"></p>
+        <button type="button" class="btn-primary" id="editPlanBtn">Edit my details &amp; plan</button>
+      </div>
+    </section>
+
   </main>
+</div>
+
+<div class="onboard" id="onboard" style="display:none;">
+  <div class="onboard-card">
+    <div class="ob-progress"><div class="ob-bar" id="obBar"></div></div>
+    <p class="eyebrow" id="obStepLabel">Step 1 of 3</p>
+    <div class="ob-step active" data-step="1">
+      <h2>Let's set up your plan</h2>
+      <p class="modal-subtext">Tell us about your body and we'll work out your calories and macros.</p>
+      <div class="form-row-group">
+        <div class="form-row"><label>Current weight (kg)</label><input type="number" id="obWeight" min="20" max="300" step="0.1"></div>
+        <div class="form-row"><label>Goal weight (kg)</label><input type="number" id="obGoalWeight" min="20" max="300" step="0.1"></div>
+      </div>
+      <div class="form-row-group">
+        <div class="form-row"><label>Height (cm)</label><input type="number" id="obHeight" min="100" max="250" step="0.5"></div>
+        <div class="form-row"><label>Age</label><input type="number" id="obAge" min="12" max="90"></div>
+      </div>
+      <div class="form-row"><label>Gender</label><select id="obGender"><option value="male">Male</option><option value="female">Female</option></select></div>
+    </div>
+    <div class="ob-step" data-step="2">
+      <h2>Food &amp; physique</h2>
+      <span class="ob-label">What do you eat?</span>
+      <div class="ob-choices" data-group="diet">
+        <button type="button" class="ob-choice" data-value="veg"><b>🟢 Vegetarian</b><span>Only veg foods are shown</span></button>
+        <button type="button" class="ob-choice" data-value="non_veg"><b>🔴 Non-vegetarian</b><span>Veg and non-veg foods</span></button>
+      </div>
+      <span class="ob-label">Physique you're going for</span>
+      <div class="ob-choices three" data-group="physique">
+        <button type="button" class="ob-choice" data-value="aesthetic"><b>Aesthetic</b><span>Lean and defined</span></button>
+        <button type="button" class="ob-choice" data-value="muscular"><b>Muscular</b><span>Big and strong</span></button>
+        <button type="button" class="ob-choice" data-value="fit"><b>Fit</b><span>Athletic and healthy</span></button>
+      </div>
+    </div>
+    <div class="ob-step" data-step="3">
+      <h2>Your training</h2>
+      <span class="ob-label">How many days a week can you go to the gym?</span>
+      <div class="ob-chips" data-group="days"><button type="button" class="chip" data-value="1">1</button><button type="button" class="chip" data-value="2">2</button><button type="button" class="chip" data-value="3">3</button><button type="button" class="chip" data-value="4">4</button><button type="button" class="chip" data-value="5">5</button><button type="button" class="chip" data-value="6">6</button></div>
+      <span class="ob-label">How long can each session be?</span>
+      <div class="ob-chips" data-group="mins"><button type="button" class="chip" data-value="30">30 min</button><button type="button" class="chip" data-value="45">45 min</button><button type="button" class="chip" data-value="60">60 min</button><button type="button" class="chip" data-value="90">90 min</button></div>
+    </div>
+    <p class="auth-error" id="obError"></p>
+    <div class="ob-actions">
+      <button type="button" class="btn-ghost" id="obSkip">Skip for now</button><span class="spacer"></span>
+      <button type="button" class="btn-ghost" id="obBack">Back</button>
+      <button type="button" class="btn-primary" id="obNext">Next</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== MODALS ===== -->
@@ -549,6 +618,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="foods-data.js?v=3"></script>
 <script src="exercises-data.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
