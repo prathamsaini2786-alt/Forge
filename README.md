@@ -1,16 +1,28 @@
-### Forge — Workout & Calorie Tracker
+# FORGE — React Assignment
 
-**Forge** is a web-based fitness and nutrition platform designed to help users build better workout routines and maintain a balanced diet. It provides exercise guidance with proper-form references, workout information, and calorie/nutrition data in a simple and interactive interface.
+This version preserves the original FORGE frontend and functionality while running it from a React + Vite entry point.
 
-**Key Features:**
+## Run
 
-*  Exercise library with workout guidance and form references
-*  Food and nutrition database
-*  Calorie-focused tracking and information
-*  Organized workout and fitness data
-*  Responsive and user-friendly web interface
-*  Exercise-form visual references
+```bash
+npm install
+npm run dev
+```
 
-**Tech Stack:** `HTML` • `CSS` • `JavaScript`
+The original FORGE HTML, CSS, data, and controller are preserved under the React wrapper so the visual design and interactions stay the same.
 
-Forge aims to make fitness planning more accessible by bringing **workouts, exercise guidance, and nutrition information together in one platform.**
+## Fixes in this package
+
+- Removed the accidental AUTH SCREEN / MAIN APP / MODALS debug text from the rendered page.
+- Prevented duplicate legacy event handlers during Vite development.
+- Hardened local Sign Up persistence so account creation reports a clear error if browser storage is unavailable.
+- Kept Login, Sign Up, logout, navigation, meals, workouts, weight, goals, achievements, settings, onboarding, water and sleep tracking.
+- Added 27 local SVG exercise illustrations, including form guides for all listed gym, cardio and sports exercises.
+- Exercise cards now show their local illustration, and selecting an exercise opens its larger form/movement guide.
+- No external image hosting is required for the exercise illustrations.
+
+## Notes
+
+- Accounts and tracker data remain browser-local via `localStorage`.
+- Chart.js is bundled locally instead of loaded from a CDN.
+- `node_modules` is intentionally not included in the ZIP.

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-label="Pull-ups form guide">
+<defs>
+  <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1f4fb"/></linearGradient>
+  <linearGradient id="accent" x1="0" x2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#3d58a8"/></linearGradient>
+  <style>
+    .title{font:800 34px Arial,sans-serif;fill:#0f1b3d} .sub{font:600 15px Arial,sans-serif;fill:#66708f}
+    .label{font:800 18px Arial,sans-serif;fill:#1e3a8a;letter-spacing:2px}
+    .small{font:600 13px Arial,sans-serif;fill:#66708f}
+    .tip{font:600 16px Arial,sans-serif;fill:#46527a}
+    .person{stroke:#0f1b3d;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .equip{stroke:#1e3a8a;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .accent{stroke:#e45b13;stroke-width:10;stroke-linecap:round;fill:none}
+    .joint{fill:#e45b13}
+  </style>
+</defs>
+<rect width="1200" height="700" rx="30" fill="url(#bg)"/>
+<text x="55" y="65" class="title">Pull-ups</text>
+<text x="55" y="95" class="sub">Back and arms • control the full range</text>
+<rect x="45" y="125" width="650" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<rect x="720" y="125" width="435" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<line x1="370" y1="155" x2="370" y2="505" stroke="#d9e0ef" stroke-width="2"/>
+<text x="90" y="170" class="label">START</text>
+<text x="415" y="170" class="label">FINISH</text>
+<path d="M110 220 H300" class="equip"/><path d="M125 190 V250 M285 190 V250" class="accent"/><g transform="translate(205,320) scale(0.85)"><circle cx="0" cy="-30" r="20" class="person"/><path d="M0 -10 L0 70 M0 0 L-55 -65 M0 0 L55 -65 M0 70 L-35 125 M0 70 L35 125" class="person"/></g>
+<path d="M420 220 H610" class="equip"/><path d="M435 190 V250 M595 190 V250" class="accent"/><g transform="translate(525,275) scale(0.85)"><circle cx="0" cy="-30" r="20" class="person"/><path d="M0 -10 L0 70 M0 0 L-55 -65 M0 0 L55 -65 M0 70 L-35 125 M0 70 L35 125" class="person"/></g>
+<text x="55" y="585" class="label">FORM CHECK</text>
+<text x="760" y="585" class="tip">✓ Start from a controlled hang</text><text x="760" y="609" class="tip">✓ Pull elbows toward ribs</text><text x="760" y="633" class="tip">✓ Avoid swinging for momentum</text>
+<rect x="45" y="620" width="1110" height="2" fill="#d9e0ef"/>
+<text x="55" y="655" class="small">FORGE • Move with control • Stop if form breaks</text>
+</svg>

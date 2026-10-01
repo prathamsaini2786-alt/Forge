@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-label="General Weight Training form guide">
+<defs>
+  <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1f4fb"/></linearGradient>
+  <linearGradient id="accent" x1="0" x2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#3d58a8"/></linearGradient>
+  <style>
+    .title{font:800 34px Arial,sans-serif;fill:#0f1b3d} .sub{font:600 15px Arial,sans-serif;fill:#66708f}
+    .label{font:800 18px Arial,sans-serif;fill:#1e3a8a;letter-spacing:2px}
+    .small{font:600 13px Arial,sans-serif;fill:#66708f}
+    .tip{font:600 16px Arial,sans-serif;fill:#46527a}
+    .person{stroke:#0f1b3d;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .equip{stroke:#1e3a8a;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .accent{stroke:#e45b13;stroke-width:10;stroke-linecap:round;fill:none}
+    .joint{fill:#e45b13}
+  </style>
+</defs>
+<rect width="1200" height="700" rx="30" fill="url(#bg)"/>
+<text x="55" y="65" class="title">General Weight Training</text>
+<text x="55" y="95" class="sub">Full-body strength • controlled reps</text>
+<rect x="45" y="125" width="650" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<rect x="720" y="125" width="435" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<line x1="370" y1="155" x2="370" y2="505" stroke="#d9e0ef" stroke-width="2"/>
+<text x="90" y="170" class="label">START</text>
+<text x="415" y="170" class="label">FINISH</text>
+<g transform="translate(205,350) scale(0.95)"><circle cx="0" cy="-80" r="22" class="person"/><path d="M0 -58 L0 45 M0 -35 L-65 5 M0 -35 L65 5 M0 45 L-35 120 M0 45 L35 120" class="person"/><path d="M-65 5 l-18 0 M65 5 l18 0" class="equip"/><path d="M-92 -7 v24 M-84 -7 v24 M84 -7 v24 M92 -7 v24" class="equip"/></g>
+<g transform="translate(525,350) scale(0.95)"><circle cx="0" cy="-80" r="22" class="person"/><path d="M0 -58 L0 45 M0 -35 L-65 5 M0 -35 L65 5 M0 45 L-35 120 M0 45 L35 120" class="person"/><path d="M-65 5 l-18 0 M65 5 l18 0" class="equip"/><path d="M-92 -7 v24 M-84 -7 v24 M84 -7 v24 M92 -7 v24" class="equip"/></g><path d="M470 285 Q525 245 580 285" class="accent"/>
+<text x="55" y="585" class="label">FORM CHECK</text>
+<text x="760" y="585" class="tip">✓ Choose a manageable load</text><text x="760" y="609" class="tip">✓ Use full controlled range</text><text x="760" y="633" class="tip">✓ Progress gradually</text>
+<rect x="45" y="620" width="1110" height="2" fill="#d9e0ef"/>
+<text x="55" y="655" class="small">FORGE • Move with control • Stop if form breaks</text>
+</svg>
