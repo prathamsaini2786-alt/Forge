@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-label="Lat Pulldown form guide">
+<defs>
+  <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1f4fb"/></linearGradient>
+  <linearGradient id="accent" x1="0" x2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#3d58a8"/></linearGradient>
+  <style>
+    .title{font:800 34px Arial,sans-serif;fill:#0f1b3d} .sub{font:600 15px Arial,sans-serif;fill:#66708f}
+    .label{font:800 18px Arial,sans-serif;fill:#1e3a8a;letter-spacing:2px}
+    .small{font:600 13px Arial,sans-serif;fill:#66708f}
+    .tip{font:600 16px Arial,sans-serif;fill:#46527a}
+    .person{stroke:#0f1b3d;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .equip{stroke:#1e3a8a;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .accent{stroke:#e45b13;stroke-width:10;stroke-linecap:round;fill:none}
+    .joint{fill:#e45b13}
+  </style>
+</defs>
+<rect width="1200" height="700" rx="30" fill="url(#bg)"/>
+<text x="55" y="65" class="title">Lat Pulldown</text>
+<text x="55" y="95" class="sub">Back • pull the bar toward the upper chest</text>
+<rect x="45" y="125" width="650" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<rect x="720" y="125" width="435" height="410" rx="24" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<line x1="370" y1="155" x2="370" y2="505" stroke="#d9e0ef" stroke-width="2"/>
+<text x="90" y="170" class="label">START</text>
+<text x="415" y="170" class="label">FINISH</text>
+<path d="M100 205 H310" class="equip"/><g transform="translate(205,350) scale(0.9)"><circle cx="-35" cy="-55" r="20" class="person"/><path d="M-35 -35 L10 30 L75 30 M10 30 L-10 95 M75 30 L120 75 M-10 95 L-45 95 M120 75 L145 75" class="person"/></g>
+<path d="M420 205 H630" class="equip"/><g transform="translate(525,350) scale(0.9)"><circle cx="-35" cy="-55" r="20" class="person"/><path d="M-35 -35 L10 30 L75 30 M10 30 L-10 95 M75 30 L120 75 M-10 95 L-45 95 M120 75 L145 75" class="person"/></g><path d="M460 205 Q525 300 590 205" class="accent"/>
+<text x="55" y="585" class="label">FORM CHECK</text>
+<text x="760" y="585" class="tip">✓ Chest tall, shoulders down</text><text x="760" y="609" class="tip">✓ Pull elbows toward your sides</text><text x="760" y="633" class="tip">✓ Control the return</text>
+<rect x="45" y="620" width="1110" height="2" fill="#d9e0ef"/>
+<text x="55" y="655" class="small">FORGE • Move with control • Stop if form breaks</text>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 650" role="img" aria-label="Incline Treadmill Walk exercise guide">
+<defs>
+ <linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#f1f4fb"/></linearGradient>
+ <style>
+ .title{font:800 34px Arial,sans-serif;fill:#0f1b3d} .sub{font:600 15px Arial,sans-serif;fill:#66708f}
+ .label{font:800 17px Arial,sans-serif;fill:#1e3a8a;letter-spacing:2px} .tip{font:600 17px Arial,sans-serif;fill:#46527a}
+ .p{stroke:#0f1b3d;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none}
+ .e{stroke:#1e3a8a;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none}
+ .a{stroke:#e45b13;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;fill:none}
+ </style>
+</defs>
+<rect width="1100" height="650" rx="28" fill="url(#bg)"/>
+<text x="50" y="62" class="title">Incline Treadmill Walk</text><text x="50" y="92" class="sub">Cardio • incline walking with posture</text>
+<rect x="45" y="125" width="600" height="440" rx="25" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<rect x="670" y="125" width="385" height="440" rx="25" fill="#fff" stroke="#d9e0ef" stroke-width="2"/>
+<text x="85" y="170" class="label">MOVEMENT</text>
+<path d="M120 445 L470 330 L515 470 H145 Z" class="e"/><path d="M150 430 L465 325" class="a"/><circle cx="300" cy="235" r="20" class="p"/><path d="M300 260 L300 345 M300 285 L250 330 M300 285 L350 325 M300 345 L255 420 M300 345 L365 400" class="p"/>
+<text x="700" y="175" class="label">FORM CHECK</text>
+<text x="700" y="510" class="tip">✓ Use a controlled incline</text><text x="700" y="540" class="tip">✓ Don't hold the rails</text><text x="700" y="570" class="tip">✓ Maintain upright posture</text>
+<text x="55" y="615" class="sub">FORGE • Controlled movement • Good technique first</text>
+</svg>
